@@ -19,7 +19,6 @@ impl MouseController {
         Ok(Self { enigo })
     }
 
-    /// 检查是否在macOS系统上
     #[cfg(target_os = "macos")]
     pub fn is_macos() -> bool {
         true

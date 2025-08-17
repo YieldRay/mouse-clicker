@@ -2,11 +2,11 @@
 //!
 //! 使用egui实现连点器的主界面
 
-use crate::config::{AppSettings, MouseButton, FunctionKey};
-use crate::core::{ClickerManager, ClickerStatus, ClickerState};
+use crate::config::{AppSettings, FunctionKey, MouseButton};
 use crate::core::mouse::MouseController;
+use crate::core::{ClickerManager, ClickerState, ClickerStatus};
 use crate::utils::Result;
-use egui::{Context, Ui, RichText, Color32};
+use egui::{Color32, Context, RichText, Ui};
 
 /// 主窗口应用程序状态
 pub struct MainWindow {
@@ -41,7 +41,9 @@ impl MainWindow {
         let settings = AppSettings::default();
         let ui_state = UiState {
             interval_text: settings.interval_ms.to_string(),
-            count_text: settings.click_count.map_or(String::new(), |c| c.to_string()),
+            count_text: settings
+                .click_count
+                .map_or(String::new(), |c| c.to_string()),
             unlimited_clicks: settings.click_count.is_none(),
             last_hotkey_time: None,
         };
@@ -101,13 +103,13 @@ impl MainWindow {
         if let Some(manager) = &mut self.clicker_manager {
             if manager.check_hotkey() {
                 let now = std::time::Instant::now();
-                
+
                 // 防抖机制：如果距离上次热键触发不到500ms，则忽略
                 let should_trigger = match self.ui_state.last_hotkey_time {
                     Some(last_time) => now.duration_since(last_time).as_millis() > 500,
                     None => true,
                 };
-                
+
                 if should_trigger {
                     self.ui_state.last_hotkey_time = Some(now);
                     if let Err(e) = manager.toggle() {
@@ -133,7 +135,7 @@ impl MainWindow {
                         }
                         ui.separator();
                     }
-                    
+
                     if ui.button("关于").clicked() {
                         self.error_message = Some("Mouse Clicker v0.1.0".to_string());
                         ui.close_menu();
@@ -153,14 +155,14 @@ impl MainWindow {
 
             // 设置区域
             self.draw_settings_section(ui);
-            
+
             ui.add_space(15.0);
-            
+
             // 状态显示区域
             self.draw_status_section(ui);
-            
+
             ui.add_space(15.0);
-            
+
             // 控制按钮区域
             self.draw_control_section(ui);
         });
@@ -173,9 +175,9 @@ impl MainWindow {
             ui.add_enabled_ui(is_enabled, |ui| {
                 // 点击间隔设置
                 ui.horizontal(|ui| {
-                        ui.label("点击间隔 (毫秒):");
+                    ui.label("点击间隔 (毫秒):");
                     ui.add_space(10.0);
-                    
+
                     let response = ui.text_edit_singleline(&mut self.ui_state.interval_text);
                     if response.changed() {
                         if let Ok(interval) = self.ui_state.interval_text.parse::<u64>() {
@@ -193,7 +195,7 @@ impl MainWindow {
                 ui.horizontal(|ui| {
                     ui.label("鼠标按键:");
                     ui.add_space(10.0);
-                    
+
                     egui::ComboBox::from_id_source("mouse_button")
                         .selected_text(self.settings.mouse_button.to_string())
                         .show_ui(ui, |ui| {
@@ -206,7 +208,14 @@ impl MainWindow {
                                 MouseButton::ScrollDown,
                             ];
                             for &button in &buttons {
-                                if ui.selectable_value(&mut self.settings.mouse_button, button, button.to_string()).changed() {
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.mouse_button,
+                                        button,
+                                        button.to_string(),
+                                    )
+                                    .changed()
+                                {
                                     self.update_clicker_settings();
                                 }
                             }
@@ -219,12 +228,19 @@ impl MainWindow {
                 ui.horizontal(|ui| {
                     ui.label("热键:");
                     ui.add_space(10.0);
-                    
+
                     egui::ComboBox::from_id_source("hotkey")
                         .selected_text(self.settings.hotkey.to_string())
                         .show_ui(ui, |ui| {
                             for &key in &FunctionKey::all() {
-                                if ui.selectable_value(&mut self.settings.hotkey, key, key.to_string()).changed() {
+                                if ui
+                                    .selectable_value(
+                                        &mut self.settings.hotkey,
+                                        key,
+                                        key.to_string(),
+                                    )
+                                    .changed()
+                                {
                                     self.update_clicker_settings();
                                 }
                             }
@@ -237,8 +253,11 @@ impl MainWindow {
                 ui.horizontal(|ui| {
                     ui.label("点击次数:");
                     ui.add_space(10.0);
-                    
-                    if ui.checkbox(&mut self.ui_state.unlimited_clicks, "无限制").changed() {
+
+                    if ui
+                        .checkbox(&mut self.ui_state.unlimited_clicks, "无限制")
+                        .changed()
+                    {
                         if self.ui_state.unlimited_clicks {
                             self.settings.click_count = None;
                             self.ui_state.count_text.clear();
@@ -248,7 +267,7 @@ impl MainWindow {
                         }
                         self.update_clicker_settings();
                     }
-                    
+
                     if !self.ui_state.unlimited_clicks {
                         ui.add_space(10.0);
                         let response = ui.text_edit_singleline(&mut self.ui_state.count_text);
@@ -278,14 +297,14 @@ impl MainWindow {
                 ui.colored_label(color, format!("状态: {}", text));
 
                 ui.add_space(20.0);
-                
+
                 // 点击计数
                 ui.label(format!("点击次数: {}", self.current_status.click_count));
                 if let Some(target) = self.current_status.target_count {
                     ui.label(format!("/ {}", target));
                 }
                 ui.add_space(20.0);
-                
+
                 // 运行时间
                 if self.current_status.runtime_seconds > 0 {
                     let minutes = self.current_status.runtime_seconds / 60;
@@ -302,12 +321,18 @@ impl MainWindow {
             let button_size = egui::Vec2::new(100.0, 30.0);
             match self.current_status.state {
                 ClickerState::Stopped => {
-                    if ui.add_sized(button_size, egui::Button::new("开始")).clicked() {
+                    if ui
+                        .add_sized(button_size, egui::Button::new("开始"))
+                        .clicked()
+                    {
                         self.toggle_clicking();
                     }
                 }
                 ClickerState::Running => {
-                    if ui.add_sized(button_size, egui::Button::new("停止")).clicked() {
+                    if ui
+                        .add_sized(button_size, egui::Button::new("停止"))
+                        .clicked()
+                    {
                         self.toggle_clicking();
                     }
                 }
@@ -330,8 +355,6 @@ impl MainWindow {
                 });
         }
     }
-
-    
 
     /// 切换点击状态（与热键行为一致）
     fn toggle_clicking(&mut self) {

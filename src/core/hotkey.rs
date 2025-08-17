@@ -17,8 +17,8 @@ pub struct HotkeyManager {
 impl HotkeyManager {
     /// 创建新的热键管理器
     pub fn new() -> Result<Self, String> {
-        let manager = GlobalHotKeyManager::new()
-            .map_err(|e| format!("初始化热键管理器失败: {}", e))?;
+        let manager =
+            GlobalHotKeyManager::new().map_err(|e| format!("初始化热键管理器失败: {}", e))?;
 
         Ok(Self {
             manager,
@@ -36,7 +36,7 @@ impl HotkeyManager {
         // 注册新热键
         let code = self.function_key_to_code(key)?;
         let hotkey = HotKey::new(Some(Modifiers::empty()), code);
-        
+
         self.manager
             .register(hotkey)
             .map_err(|e| format!("注册热键{:?} 失败: {}", key, e))?;

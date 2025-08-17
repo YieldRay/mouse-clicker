@@ -1,10 +1,10 @@
 //! 应用程序设置管理
-//! 
+//!
 //! 负责配置文件的读取、保存和默认值管理
 
+use crate::utils::Result;
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
-use crate::utils::Result;
 
 /// 鼠标按键类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -46,7 +46,18 @@ impl std::fmt::Display for MouseButton {
 /// 功能键类型
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum FunctionKey {
-    F1, F2, F3, F4, F5, F6, F7, F8, F9, F10, F11, F12,
+    F1,
+    F2,
+    F3,
+    F4,
+    F5,
+    F6,
+    F7,
+    F8,
+    F9,
+    F10,
+    F11,
+    F12,
 }
 
 impl Default for FunctionKey {
@@ -65,8 +76,19 @@ impl FunctionKey {
     /// 获取所有可用的功能键
     pub fn all() -> Vec<FunctionKey> {
         vec![
-            Self::F1, Self::F2, Self::F3, Self::F4, Self::F5, Self::F6,
-            Self::F7, Self::F8, Self::F9, Self::F10, Self::F11, Self::F12,]
+            Self::F1,
+            Self::F2,
+            Self::F3,
+            Self::F4,
+            Self::F5,
+            Self::F6,
+            Self::F7,
+            Self::F8,
+            Self::F9,
+            Self::F10,
+            Self::F11,
+            Self::F12,
+        ]
     }
 }
 
@@ -129,7 +151,7 @@ impl SettingsManager {
     pub fn new() -> Result<Self> {
         let config_path = Self::get_config_path()?;
         let settings = Self::load_from_file(&config_path).unwrap_or_default();
-        
+
         Ok(Self {
             config_path,
             settings,
@@ -138,13 +160,11 @@ impl SettingsManager {
 
     /// 获取配置文件路径
     fn get_config_path() -> Result<PathBuf> {
-        let config_dir = dirs::config_dir()
-            .ok_or_else(|| "无法获取配置目录".to_string())?;
-        
+        let config_dir = dirs::config_dir().ok_or_else(|| "无法获取配置目录".to_string())?;
+
         let app_config_dir = config_dir.join("mouse-clicker");
-        std::fs::create_dir_all(&app_config_dir)
-            .map_err(|e| format!("创建配置目录失败: {}", e))?;
-        
+        std::fs::create_dir_all(&app_config_dir).map_err(|e| format!("创建配置目录失败: {}", e))?;
+
         Ok(app_config_dir.join("settings.json"))
     }
 
@@ -154,12 +174,12 @@ impl SettingsManager {
             return Ok(AppSettings::default());
         }
 
-        let content = std::fs::read_to_string(path)
-            .map_err(|e| format!("读取配置文件失败: {}", e))?;
-        let settings: AppSettings = serde_json::from_str(&content)
-            .map_err(|e| format!("解析配置文件失败: {}", e))?;
+        let content =
+            std::fs::read_to_string(path).map_err(|e| format!("读取配置文件失败: {}", e))?;
+        let settings: AppSettings =
+            serde_json::from_str(&content).map_err(|e| format!("解析配置文件失败: {}", e))?;
         settings.validate()?;
-        
+
         Ok(settings)
     }
 

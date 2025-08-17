@@ -25,7 +25,7 @@ impl MouseClickerApp {
         if let Err(e) = egui_chinese_font::setup_chinese_fonts(&cc.egui_ctx) {
             log::warn!("加载中文字体失败: {}", e);
         }
-        
+
         //尝试加载保存的设置
         let settings_manager = SettingsManager::new().unwrap_or_default();
 
@@ -173,5 +173,6 @@ pub fn run_app() -> Result<()> {
         "Mouse Clicker",
         options,
         Box::new(|cc| Box::new(MouseClickerApp::new(cc))),
-    ).map_err(|e| format!("启动应用程序失败: {}", e))
+    )
+    .map_err(|e| format!("启动应用程序失败: {}", e))
 }

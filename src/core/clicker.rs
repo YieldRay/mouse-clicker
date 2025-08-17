@@ -3,8 +3,8 @@
 //! 实现自动点击的核心逻辑
 
 use crate::config::AppSettings;
-use crate::core::mouse::MouseController;
 use crate::core::hotkey::HotkeyManager;
+use crate::core::mouse::MouseController;
 use std::sync::atomic::{AtomicBool, AtomicU32, Ordering};
 use std::sync::Arc;
 use std::thread;
@@ -74,8 +74,6 @@ impl ClickerManager {
             return Ok(());
         }
 
-        
-
         self.is_running.store(true, Ordering::Relaxed);
         self.click_count.store(0, Ordering::Relaxed);
         self.start_time = Some(Instant::now());
@@ -102,7 +100,7 @@ impl ClickerManager {
 
             while is_running.load(Ordering::Relaxed) {
                 let current_count = click_count.load(Ordering::Relaxed);
-                
+
                 // 检查是否达到目标点击次数
                 if let Some(target) = target_count {
                     if current_count >= target {
@@ -116,12 +114,19 @@ impl ClickerManager {
                     Ok(_) => {
                         // 只有在点击成功时才增加计数器
                         click_count.fetch_add(1, Ordering::Relaxed);
-                        log::debug!("执行点击: {:?}, 当前计数: {}", mouse_button, current_count + 1);
+                        log::debug!(
+                            "执行点击: {:?}, 当前计数: {}",
+                            mouse_button,
+                            current_count + 1
+                        );
                     }
                     Err(e) => {
                         log::error!("点击操作失败: {}", e);
                         // 如果是权限问题，继续尝试而不是停止
-                        if e.contains("权限") || e.contains("permission") || e.contains("accessibility") {
+                        if e.contains("权限")
+                            || e.contains("permission")
+                            || e.contains("accessibility")
+                        {
                             log::warn!("检测到权限问题，请在系统设置中授予辅助功能权限");
                             // 继续运行，但不增加计数器
                         } else {
@@ -159,7 +164,7 @@ impl ClickerManager {
         if self.settings.hotkey != new_settings.hotkey {
             self.hotkey_manager.set_hotkey(new_settings.hotkey)?;
         }
-        
+
         self.settings = new_settings;
         log::info!("连点器设置已更新");
         Ok(())
@@ -173,7 +178,8 @@ impl ClickerManager {
             ClickerState::Stopped
         };
 
-        let runtime_seconds = self.start_time
+        let runtime_seconds = self
+            .start_time
             .map(|start| start.elapsed().as_secs())
             .unwrap_or(0);
 
