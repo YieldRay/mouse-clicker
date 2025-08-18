@@ -387,26 +387,33 @@ impl MainWindow {
 
     /// 绘制控制按钮区域
     fn draw_control_section(&mut self, ui: &mut Ui) {
-        ui.horizontal(|ui| {
-            let button_size = egui::Vec2::new(100.0, 30.0);
-            match self.current_status.state {
-                ClickerState::Stopped => {
+        // 两侧分别显示开始和停止按钮
+        let button_size = egui::Vec2::new(140.0, 30.0);
+        let is_stopped = self.current_status.state == ClickerState::Stopped;
+        let is_running = self.current_status.state == ClickerState::Running;
+        ui.columns(2, |columns| {
+            columns[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
+                ui.add_enabled_ui(is_stopped, |ui| {
                     if ui
                         .add_sized(button_size, egui::Button::new("开始"))
                         .clicked()
+                        && is_stopped
                     {
                         self.toggle_clicking();
                     }
-                }
-                ClickerState::Running => {
+                });
+            });
+            columns[1].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                ui.add_enabled_ui(is_running, |ui| {
                     if ui
                         .add_sized(button_size, egui::Button::new("停止"))
                         .clicked()
+                        && is_running
                     {
                         self.toggle_clicking();
                     }
-                }
-            }
+                });
+            });
         });
     }
 
