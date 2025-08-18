@@ -32,6 +32,8 @@ sudo yum install libxdo libxcb libxkbcommon gtk3
 
 ## 故障排除
 
+<https://github.com/enigo-rs/enigo/blob/main/Permissions.md>
+
 ### macOS 权限问题
 
 如果在 macOS 上点击计数器增加但实际没有点击效果：

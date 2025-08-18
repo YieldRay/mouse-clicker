@@ -3,6 +3,7 @@
 //! 整合所有组件，实现eframe::App trait
 
 use crate::config::SettingsManager;
+use crate::core::mouse::MouseController;
 use crate::ui::MainWindow;
 use crate::utils::Result;
 use eframe::egui;
@@ -153,18 +154,21 @@ impl eframe::App for MouseClickerApp {
 
 /// 应用程序启动器
 pub fn run_app() -> Result<()> {
-    // 初始化日志系统
     env_logger::init();
     log::info!("启动应用程序 run_app");
 
-    // 配置应用程序窗口选项
+    // 窗口选项
     let options = eframe::NativeOptions {
         viewport: egui::ViewportBuilder::default()
             .with_inner_size([306.0, 308.0])
             .with_min_inner_size([306.0, 308.0])
             .with_max_inner_size([306.0, 308.0])
             .with_resizable(true)
-            .with_title("Mouse Clicker"),
+            .with_title(if MouseController::is_admin() {
+                "Mouse Clicker (管理员)"
+            } else {
+                "Mouse Clicker"
+            }),
         ..Default::default()
     };
 

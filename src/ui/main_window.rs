@@ -154,7 +154,6 @@ impl MainWindow {
                             }
                             ui.close_menu();
                         }
-                        ui.separator();
                     }
 
                     if MouseController::is_windows() && !MouseController::is_admin() {
@@ -164,7 +163,6 @@ impl MainWindow {
                             }
                             ui.close_menu();
                         }
-                        ui.separator();
                     }
 
                     let theme_text = if self.ui_state.dark_mode {
