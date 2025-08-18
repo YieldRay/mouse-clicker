@@ -211,7 +211,8 @@ impl MainWindow {
                         } else {
                             // 解析失败，可能是输入了非数字或超出u64范围
                             if !self.ui_state.interval_text.is_empty() {
-                                self.error_message = Some("请输入有效的数字（1-60000毫秒）".to_string());
+                                self.error_message =
+                                    Some("请输入有效的数字（1-60000毫秒）".to_string());
                             }
                         }
                     }
@@ -306,7 +307,8 @@ impl MainWindow {
                                     self.update_clicker_settings();
                                 } else if count > 1000000 {
                                     // 防止设置过大的值导致潜在问题
-                                    self.error_message = Some("点击次数不能超过100万次".to_string());
+                                    self.error_message =
+                                        Some("点击次数不能超过100万次".to_string());
                                     self.ui_state.count_text = "1000000".to_string();
                                     self.settings.click_count = Some(1000000);
                                     self.update_clicker_settings();
@@ -314,8 +316,10 @@ impl MainWindow {
                             } else {
                                 // 解析失败，可能是输入了非数字或超出u32范围
                                 if !self.ui_state.count_text.is_empty() {
-                                    self.error_message = Some("请输入有效的数字（1-1000000）".to_string());
-                                }}
+                                    self.error_message =
+                                        Some("请输入有效的数字（1-1000000）".to_string());
+                                }
+                            }
                         }
                     }
                 });
@@ -326,39 +330,47 @@ impl MainWindow {
     /// 绘制状态显示区域
     fn draw_status_section(&mut self, ui: &mut Ui) {
         ui.group(|ui| {
-            ui.horizontal(|ui| {
-                // 状态指示器
-                let (color, text) = match self.current_status.state {
-                    ClickerState::Stopped => (Color32::GRAY, "已停止"),
-                    ClickerState::Running => (Color32::GREEN, "运行中"),
-                };
-                ui.colored_label(color, format!("状态: {}", text));
+            ui.columns(3, |columns| {
+                // 第一列：状态指示器(1/3)
+                columns[0].vertical_centered(|ui| {
+                    let (color, text) = match self.current_status.state {
+                        ClickerState::Stopped => (Color32::GRAY, "已停止"),
+                        ClickerState::Running => (Color32::GREEN, "运行中"),
+                    };
+                    ui.colored_label(color, RichText::new(format!("状态: {}", text)).size(12.0));
+                });
 
-                ui.add_space(20.0);
-
-                // 点击计数
-                ui.label(format!("点击次数: {}", self.current_status.click_count));
-                if let Some(target) = self.current_status.target_count {
-                    ui.label(format!("/ {}", target));
-                }
-                ui.add_space(20.0);
-
-                // 运行时间
-                if self.current_status.runtime_seconds > 0 {
-                    let total_seconds = self.current_status.runtime_seconds;
-                    
-                    // 防止显示过大的时间值，超过24小时显示天数
-                    if total_seconds >= 86400 {  // 24小时 = 86400秒
-                        let days = total_seconds / 86400;
-                        let hours = (total_seconds % 86400) / 3600;
-                        let minutes = (total_seconds % 3600) / 60;
-                        ui.label(format!("运行时间: {}天 {:02}:{:02}", days, hours, minutes));
+                // 第二列：点击计数 (1/3)
+                columns[1].vertical_centered(|ui| {
+                    let count_text = if let Some(target) = self.current_status.target_count {
+                        format!("点击: {} / {}", self.current_status.click_count, target)
                     } else {
-                        let minutes = total_seconds / 60;
-                        let seconds = total_seconds % 60;
-                        ui.label(format!("运行时间: {:02}:{:02}", minutes, seconds));
-                    }
-                }
+                        format!("点击: {}", self.current_status.click_count)
+                    };
+                    ui.label(RichText::new(count_text).size(12.0));
+                });
+
+                // 第三列：运行时间 (1/3)
+                columns[2].vertical_centered(|ui| {
+                    let time_text = if self.current_status.runtime_seconds > 0 {
+                        let total_seconds = self.current_status.runtime_seconds;
+
+                        if total_seconds >= 86400 {
+                            // 24小时 = 86400秒
+                            let days = total_seconds / 86400;
+                            let hours = (total_seconds % 86400) / 3600;
+                            let minutes = (total_seconds % 3600) / 60;
+                            format!("时间: {}天{:02}:{:02}", days, hours, minutes)
+                        } else {
+                            let minutes = total_seconds / 60;
+                            let seconds = total_seconds % 60;
+                            format!("时间: {:02}:{:02}", minutes, seconds)
+                        }
+                    } else {
+                        "时间: 00:00".to_string()
+                    };
+                    ui.label(RichText::new(time_text).size(12.0));
+                });
             });
         });
     }
