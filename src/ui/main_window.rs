@@ -387,15 +387,26 @@ impl MainWindow {
 
     /// 绘制控制按钮区域
     fn draw_control_section(&mut self, ui: &mut Ui) {
-        // 两侧分别显示开始和停止按钮
+        // 激活时按钮显示热键，禁用时不显示括号
         let button_size = egui::Vec2::new(140.0, 30.0);
         let is_stopped = self.current_status.state == ClickerState::Stopped;
         let is_running = self.current_status.state == ClickerState::Running;
+        let start_text = if is_stopped {
+            format!("开始 ({})", self.settings.hotkey)
+        } else {
+            "开始".to_string()
+        };
+        let stop_text = if is_running {
+            format!("停止 ({})", self.settings.hotkey)
+        } else {
+            "停止".to_string()
+        };
         ui.columns(2, |columns| {
+            // 左侧按钮：开始
             columns[0].with_layout(egui::Layout::left_to_right(egui::Align::Center), |ui| {
                 ui.add_enabled_ui(is_stopped, |ui| {
                     if ui
-                        .add_sized(button_size, egui::Button::new("开始"))
+                        .add_sized(button_size, egui::Button::new(start_text.clone()))
                         .clicked()
                         && is_stopped
                     {
@@ -403,10 +414,11 @@ impl MainWindow {
                     }
                 });
             });
+            // 右侧按钮：停止
             columns[1].with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                 ui.add_enabled_ui(is_running, |ui| {
                     if ui
-                        .add_sized(button_size, egui::Button::new("停止"))
+                        .add_sized(button_size, egui::Button::new(stop_text.clone()))
                         .clicked()
                         && is_running
                     {
