@@ -1,12 +1,13 @@
 //! 主窗口UI实现
 //!
-//! 使用egui实现连点器的主界面
+//! 使用egui实现连点器主界面
 
 use crate::config::{AppSettings, FunctionKey, MouseButton};
 use crate::core::mouse::MouseController;
 use crate::core::{ClickerManager, ClickerState, ClickerStatus};
 use crate::utils::Result;
 use egui::{Color32, Context, RichText, Ui};
+use git_version::git_version;
 
 /// 主窗口应用程序状态
 pub struct MainWindow {
@@ -106,7 +107,17 @@ impl MainWindow {
 
                 // 防抖机制：如果距离上次热键触发不到500ms，则忽略
                 let should_trigger = match self.ui_state.last_hotkey_time {
-                    Some(last_time) => now.duration_since(last_time).as_millis() > 500,
+                    Some(last_time) => {
+                        // 使用 checked_duration_since 避免时间回调导致的 panic
+                        match now.checked_duration_since(last_time) {
+                            Some(duration) => duration.as_millis() > 500,
+                            None => {
+                                // 时间回调，重置防抖时间
+                                log::warn!("检测到系统时间回调，重置防抖机制");
+                                true
+                            }
+                        }
+                    }
                     None => true,
                 };
 
@@ -137,7 +148,8 @@ impl MainWindow {
                     }
 
                     if ui.button("关于").clicked() {
-                        self.error_message = Some("Mouse Clicker v0.1.0".to_string());
+                        let version = git_version!(fallback = "unknown");
+                        self.error_message = Some(format!("Mouse Clicker {}", version));
                         ui.close_menu();
                     }
                 });
@@ -184,6 +196,22 @@ impl MainWindow {
                             if interval > 0 && interval <= 60000 {
                                 self.settings.interval_ms = interval;
                                 self.update_clicker_settings();
+                            } else if interval > 60000 {
+                                // 防止设置过大的间隔时间
+                                self.error_message = Some("点击间隔不能超过60秒".to_string());
+                                self.ui_state.interval_text = "60000".to_string();
+                                self.settings.interval_ms = 60000;
+                                self.update_clicker_settings();
+                            } else if interval == 0 {
+                                self.error_message = Some("点击间隔不能为0".to_string());
+                                self.ui_state.interval_text = "1".to_string();
+                                self.settings.interval_ms = 1;
+                                self.update_clicker_settings();
+                            }
+                        } else {
+                            // 解析失败，可能是输入了非数字或超出u64范围
+                            if !self.ui_state.interval_text.is_empty() {
+                                self.error_message = Some("请输入有效的数字（1-60000毫秒）".to_string());
                             }
                         }
                     }
@@ -276,8 +304,18 @@ impl MainWindow {
                                 if count > 0 && count <= 1000000 {
                                     self.settings.click_count = Some(count);
                                     self.update_clicker_settings();
+                                } else if count > 1000000 {
+                                    // 防止设置过大的值导致潜在问题
+                                    self.error_message = Some("点击次数不能超过100万次".to_string());
+                                    self.ui_state.count_text = "1000000".to_string();
+                                    self.settings.click_count = Some(1000000);
+                                    self.update_clicker_settings();
                                 }
-                            }
+                            } else {
+                                // 解析失败，可能是输入了非数字或超出u32范围
+                                if !self.ui_state.count_text.is_empty() {
+                                    self.error_message = Some("请输入有效的数字（1-1000000）".to_string());
+                                }}
                         }
                     }
                 });
@@ -307,9 +345,19 @@ impl MainWindow {
 
                 // 运行时间
                 if self.current_status.runtime_seconds > 0 {
-                    let minutes = self.current_status.runtime_seconds / 60;
-                    let seconds = self.current_status.runtime_seconds % 60;
-                    ui.label(format!("运行时间: {:02}:{:02}", minutes, seconds));
+                    let total_seconds = self.current_status.runtime_seconds;
+                    
+                    // 防止显示过大的时间值，超过24小时显示天数
+                    if total_seconds >= 86400 {  // 24小时 = 86400秒
+                        let days = total_seconds / 86400;
+                        let hours = (total_seconds % 86400) / 3600;
+                        let minutes = (total_seconds % 3600) / 60;
+                        ui.label(format!("运行时间: {}天 {:02}:{:02}", days, hours, minutes));
+                    } else {
+                        let minutes = total_seconds / 60;
+                        let seconds = total_seconds % 60;
+                        ui.label(format!("运行时间: {:02}:{:02}", minutes, seconds));
+                    }
                 }
             });
         });

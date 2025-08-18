@@ -113,6 +113,7 @@ impl ClickerManager {
                 match mouse.click(mouse_button) {
                     Ok(_) => {
                         // 只有在点击成功时才增加计数器
+                        // u32 溢出时会自动回绕到0
                         click_count.fetch_add(1, Ordering::Relaxed);
                         log::debug!(
                             "执行点击: {:?}, 当前计数: {}",
