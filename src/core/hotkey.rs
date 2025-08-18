@@ -46,11 +46,11 @@ impl HotkeyManager {
         Ok(())
     }
 
-    /// 检查是否有热键事件
+    /// 检查热键是否被按下
     pub fn check_hotkey_pressed(&self) -> bool {
         if let Ok(event) = global_hotkey::GlobalHotKeyEvent::receiver().try_recv() {
-            log::debug!("热键被按下: {:?}", event);
-            return true;
+            log::debug!("热键触发: {:?}", event);
+            return event.state == global_hotkey::HotKeyState::Pressed;
         }
         false
     }

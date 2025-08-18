@@ -155,7 +155,7 @@ impl ClickerManager {
     }
 
     /// 检查热键是否被按下
-    pub fn check_hotkey(&self) -> bool {
+    pub fn check_hotkey_pressed(&self) -> bool {
         self.hotkey_manager.check_hotkey_pressed()
     }
 

@@ -32,8 +32,8 @@ struct UiState {
     count_text: String,
     /// 是否显示无限点击
     unlimited_clicks: bool,
-    /// 上次热键触发时间，用于防抖
-    last_hotkey_time: Option<std::time::Instant>,
+    /// 上次渲染时热键是否被按下
+    last_hotkey_pressed: bool,
     /// 是否使用暗色主题
     dark_mode: bool,
 }
@@ -47,7 +47,7 @@ impl MainWindow {
                 .click_count
                 .map_or(String::new(), |c| c.to_string()),
             unlimited_clicks: settings.click_count.is_none(),
-            last_hotkey_time: None,
+            last_hotkey_pressed: false,
             dark_mode: false,
         };
 
@@ -111,33 +111,15 @@ impl MainWindow {
     /// 检查热键
     fn check_hotkey(&mut self) {
         if let Some(manager) = &mut self.clicker_manager {
-            if manager.check_hotkey() {
-                let now = std::time::Instant::now();
-
-                // 防抖机制：如果距离上次热键触发不到500ms，则忽略
-                let should_trigger = match self.ui_state.last_hotkey_time {
-                    Some(last_time) => {
-                        // 使用 checked_duration_since 避免时间回调导致的 panic
-                        match now.checked_duration_since(last_time) {
-                            Some(duration) => duration.as_millis() > 500,
-                            None => {
-                                // 时间回调，重置防抖时间
-                                log::warn!("检测到系统时间回调，重置防抖机制");
-                                true
-                            }
-                        }
-                    }
-                    None => true,
-                };
-
-                if should_trigger {
-                    self.ui_state.last_hotkey_time = Some(now);
-                    if let Err(e) = manager.toggle() {
-                        self.error_message = Some(format!("热键操作失败: {}", e));
-                    }
-                    log::info!("热键触发，切换连点器状态");
+            let pressed = manager.check_hotkey_pressed();
+            if pressed && !self.ui_state.last_hotkey_pressed {
+                // 只在“未按下”->“按下”时触发
+                if let Err(e) = manager.toggle() {
+                    self.error_message = Some(format!("热键操作失败: {}", e));
                 }
+                log::info!("热键触发，切换连点器状态");
             }
+            self.ui_state.last_hotkey_pressed = pressed;
         }
     }
 
