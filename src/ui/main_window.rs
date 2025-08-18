@@ -219,7 +219,7 @@ impl MainWindow {
                     ui.add_space(10.0);
 
                     let response = ui.text_edit_singleline(&mut self.ui_state.interval_text);
-                    if response.changed() {
+                    if response.lost_focus() && !response.has_focus() {
                         if let Ok(interval) = self.ui_state.interval_text.parse::<u64>() {
                             if interval > 0 && interval <= 60000 {
                                 self.settings.interval_ms = interval;
