@@ -34,6 +34,8 @@ struct UiState {
     unlimited_clicks: bool,
     /// 上次热键触发时间，用于防抖
     last_hotkey_time: Option<std::time::Instant>,
+    /// 是否使用暗色主题
+    dark_mode: bool,
 }
 
 impl MainWindow {
@@ -47,6 +49,7 @@ impl MainWindow {
                 .map_or(String::new(), |c| c.to_string()),
             unlimited_clicks: settings.click_count.is_none(),
             last_hotkey_time: None,
+            dark_mode: false,
         };
 
         Self {
@@ -74,6 +77,13 @@ impl MainWindow {
 
     /// 更新UI
     pub fn update(&mut self, ctx: &Context) {
+        // 设置主题
+        if self.ui_state.dark_mode {
+            ctx.set_visuals(egui::Visuals::dark());
+        } else {
+            ctx.set_visuals(egui::Visuals::light());
+        }
+
         // 更新连点器状态
         self.update_clicker_status();
 
@@ -147,9 +157,30 @@ impl MainWindow {
                         ui.separator();
                     }
 
+                    if MouseController::is_windows() && !MouseController::is_admin() {
+                        if ui.button("以管理员权限重启").clicked() {
+                            if let Err(e) = MouseController::restart_as_admin() {
+                                self.error_message = Some(format!("重启失败: {}", e));
+                            }
+                            ui.close_menu();
+                        }
+                        ui.separator();
+                    }
+
+                    let theme_text = if self.ui_state.dark_mode {
+                        "切换到亮色模式"
+                    } else {
+                        "切换到暗色模式"
+                    };
+                    if ui.button(theme_text).clicked() {
+                        self.ui_state.dark_mode = !self.ui_state.dark_mode;
+                        ui.close_menu();
+                    }
+                    ui.separator();
+
                     if ui.button("关于").clicked() {
                         let version = git_version!(fallback = "unknown");
-                        self.error_message = Some(format!("Mouse Clicker {}", version));
+                        self.error_message = Some(format!("Mouse Clicker @{}", version));
                         ui.close_menu();
                     }
                 });

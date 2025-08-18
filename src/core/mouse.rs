@@ -29,6 +29,71 @@ impl MouseController {
         false
     }
 
+    #[cfg(target_os = "windows")]
+    pub fn is_windows() -> bool {
+        true
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn is_windows() -> bool {
+        false
+    }
+
+    /// 检查是否以管理员权限运行 (仅Windows)
+    #[cfg(target_os = "windows")]
+    pub fn is_admin() -> bool {
+        use std::process::Command;
+        
+        match Command::new("net")
+            .args(&["session"])
+            .output()
+        {
+            Ok(output) => output.status.success(),
+            Err(_) => false,
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn is_admin() -> bool {
+        false
+    }
+
+    /// 以管理员权限重启应用程序 (仅Windows)
+    #[cfg(target_os = "windows")]
+    pub fn restart_as_admin() -> Result<(), String> {
+        use std::env;
+        use std::process::Command;
+
+        let current_exe = env::current_exe()
+            .map_err(|e| format!("获取当前程序路径失败: {}", e))?;
+
+        match Command::new("powershell")
+            .args(&[
+                "-Command",
+                &format!(
+                    "Start-Process '{}' -Verb RunAs",
+                    current_exe.display()
+                )
+            ])
+            .spawn()
+        {
+            Ok(_) => {
+                log::info!("正在以管理员权限重启应用程序");
+                std::process::exit(0);
+            }
+            Err(e) => {
+                let error_msg = format!("以管理员权限重启失败: {}", e);
+                log::error!("{}", error_msg);
+                Err(error_msg)
+            }
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    pub fn restart_as_admin() -> Result<(), String> {
+        Err("此功能仅在Windows上可用".to_string())
+    }
+
     /// 打开macOS系统设置到隐私页面
     #[cfg(target_os = "macos")]
     pub fn open_privacy_settings() -> Result<(), String> {
@@ -39,7 +104,7 @@ impl MouseController {
             .spawn()
         {
             Ok(_) => {
-                log::info!("已打开系统设置 - 隐私与安全性- 辅助功能");
+                log::info!("已打开系统设置 - 隐私与安全性 - 辅助功能");
                 Ok(())
             }
             Err(e) => {
