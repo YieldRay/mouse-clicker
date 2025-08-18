@@ -40,8 +40,7 @@ struct UiState {
 
 impl MainWindow {
     /// 创建新的主窗口
-    pub fn new() -> Self {
-        let settings = AppSettings::default();
+    pub fn new(settings: AppSettings) -> Self {
         let ui_state = UiState {
             interval_text: settings.interval_ms.to_string(),
             count_text: settings
@@ -471,6 +470,6 @@ impl MainWindow {
 
 impl Default for MainWindow {
     fn default() -> Self {
-        Self::new()
+        Self::new(AppSettings::default())
     }
 }

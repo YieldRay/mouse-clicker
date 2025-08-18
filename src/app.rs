@@ -27,11 +27,10 @@ impl MouseClickerApp {
             log::warn!("加载中文字体失败: {}", e);
         }
 
-        //尝试加载保存的设置
+        // 尝试加载保存的设置
         let settings_manager = SettingsManager::new().unwrap_or_default();
-
-        // 创建主窗口
-        let main_window = MainWindow::new();
+        // 传递已加载的设置给主窗口
+        let main_window = MainWindow::new(settings_manager.get().clone());
 
         let app = Self {
             main_window,
