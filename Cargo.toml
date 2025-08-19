@@ -19,6 +19,7 @@ egui-chinese-font = "0.1"
 log = "0.4"
 env_logger = "0.11"
 git-version = "0.3"
+dark-light = "2.0.0"
 
 [target.'cfg(windows)'.dependencies]
 is_elevated = "0.1.2"

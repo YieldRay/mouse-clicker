@@ -5,7 +5,7 @@
 use crate::config::{AppSettings, FunctionKey, MouseButton};
 use crate::core::mouse::MouseController;
 use crate::core::{ClickerManager, ClickerState, ClickerStatus};
-use crate::utils::Result;
+use crate::utils::{detect_system_dark_mode, Result};
 use egui::{Color32, Context, RichText, Ui};
 use git_version::git_version;
 
@@ -48,7 +48,7 @@ impl MainWindow {
                 .map_or(String::new(), |c| c.to_string()),
             unlimited_clicks: settings.click_count.is_none(),
             last_hotkey_pressed: false,
-            dark_mode: false,
+            dark_mode: detect_system_dark_mode(),
         };
 
         Self {

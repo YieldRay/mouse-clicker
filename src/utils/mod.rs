@@ -3,5 +3,6 @@
 //! 包含错误处理、日志记录等通用工具功能
 
 pub mod error;
-
+pub mod theme;
 pub use error::*;
+pub use theme::*;
