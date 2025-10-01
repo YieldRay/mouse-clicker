@@ -162,12 +162,18 @@ pub fn run_app() -> Result<()> {
             .with_inner_size([306.0, 308.0])
             .with_min_inner_size([306.0, 308.0])
             .with_max_inner_size([306.0, 308.0])
-            .with_resizable(true)
+            .with_resizable(false)
+            .with_maximize_button(false)
             .with_title(if MouseController::is_admin() {
                 "Mouse Clicker (管理员)"
             } else {
                 "Mouse Clicker"
-            }),
+            })
+            .with_icon(
+                // NOTE: Adding an icon is optional
+                eframe::icon_data::from_png_bytes(&include_bytes!("../assets/icon.png")[..])
+                    .expect("Failed to load icon"),
+            ),
         ..Default::default()
     };
 
